@@ -1,4 +1,5 @@
 # AI Engineer Journey
+
 My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 
 **Start date:** May 1, 2026  
@@ -14,12 +15,26 @@ My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 ## Progress
 
 - ✅ Day 1 (May 1): Python basics — variables, lists, dicts, functions, list comprehensions
+- ✅ Day 2 (May 3): OOP — classes, `__init__`, `__str__`, error handling, file I/O, mini project (employee manager)
+- ✅ Day 3 (May 4): FastAPI CRUD API — REST endpoints, Pydantic models, auto-validation, Swagger docs, persistence
+- ✅ Day 4 (May 6): First Claude API integration — Anthropic SDK, `.env` secrets, AI-powered FastAPI endpoint
 
 ## Stack
 
-- Python 3.14, FastAPI, PostgreSQL/pgvector
-- LLM APIs: Anthropic Claude, OpenAI
-- Vector DB: Pinecone / pgvector
-- Frameworks: LangChain, LangGraph
-- Frontend: Next.js (later)
-- Deployment: Vercel, Railway
+- **Language:** Python 3.14
+- **Web framework:** FastAPI + Uvicorn
+- **Data validation:** Pydantic
+- **Database:** PostgreSQL/pgvector (planned)
+- **LLM APIs:** Anthropic Claude (active), OpenAI (planned)
+- **Vector DB:** Pinecone / pgvector (planned)
+- **Frameworks:** LangChain, LangGraph (planned)
+- **Frontend:** Next.js (planned)
+- **Deployment:** Vercel, Railway (planned)
+
+## Repository Structure
+
+```
+ai-engineer-journey/
+├── week1-python-basics/      # Day 1-2: Python fundamentals + OOP
+└── week2-fastapi/            # Day 3-4: FastAPI + Claude integration
+```
