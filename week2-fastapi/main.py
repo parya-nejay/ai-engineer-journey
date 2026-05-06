@@ -95,6 +95,11 @@ import json
 import os
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
+from anthropic import Anthropic
+from dotenv import load_dotenv
+
+load_dotenv()  # Load API key from .env file
+anthropic_client = Anthropic() # Initialize the Anthropic client (auto-reads ANTHROPIC_API_KEY)
 
 app = FastAPI()
 
@@ -106,7 +111,8 @@ class Employee(BaseModel):
     id: int
     name: str
     salary: int
-
+class ChatRequest(BaseModel):
+    message: str
 
 # === Load/save helpers ===
 
@@ -178,3 +184,22 @@ def delete_employee(employee_id: int):
     deleted = employees_db.pop(employee_id)
     save_db(employees_db)
     return {"deleted": deleted}
+
+#Add the AI endpoint
+@app.post("/chat")
+def chat_with_claude(request: ChatRequest):
+    """Send a message to Claude and get a response."""
+    response = anthropic_client.messages.create(
+        model ="claude-haiku-4-5-20251001",
+        max_tokens=1024,
+        system="You are a helpful AI assistant for a Python developer learning AI engineering. Keep responses concise and practical.",
+        messages=[
+            {"role":"user", "content": request.message}
+        ]
+    )
+    return {
+        "user_message": request.message,
+        "claude_response": response.content[0].text,
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens
+    }
