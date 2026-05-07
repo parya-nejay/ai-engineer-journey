@@ -94,12 +94,14 @@
 import json
 import os
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from anthropic import Anthropic
 from dotenv import load_dotenv
 
 load_dotenv()  # Load API key from .env file
-anthropic_client = Anthropic() # Initialize the Anthropic client (auto-reads ANTHROPIC_API_KEY)
+# Initialize the Anthropic client (auto-reads ANTHROPIC_API_KEY)
+anthropic_client = Anthropic()
 
 app = FastAPI()
 
@@ -111,10 +113,13 @@ class Employee(BaseModel):
     id: int
     name: str
     salary: int
+
+
 class ChatRequest(BaseModel):
     message: str
 
 # === Load/save helpers ===
+
 
 def load_db():
     if not os.path.exists(DB_FILE):
@@ -162,7 +167,8 @@ def get_employee(employee_id: int):
 @app.post("/employees")
 def create_employee(employee: Employee):
     if employee.id in employees_db:
-        raise HTTPException(status_code=400, detail="Employee with this ID already exists")
+        raise HTTPException(
+            status_code=400, detail="Employee with this ID already exists")
     employees_db[employee.id] = employee.model_dump()
     save_db(employees_db)
     return employees_db[employee.id]
@@ -185,16 +191,18 @@ def delete_employee(employee_id: int):
     save_db(employees_db)
     return {"deleted": deleted}
 
-#Add the AI endpoint
+# Add the AI endpoint
+
+
 @app.post("/chat")
 def chat_with_claude(request: ChatRequest):
     """Send a message to Claude and get a response."""
     response = anthropic_client.messages.create(
-        model ="claude-haiku-4-5-20251001",
+        model="claude-haiku-4-5-20251001",
         max_tokens=1024,
         system="You are a helpful AI assistant for a Python developer learning AI engineering. Keep responses concise and practical.",
         messages=[
-            {"role":"user", "content": request.message}
+            {"role": "user", "content": request.message}
         ]
     )
     return {
@@ -203,3 +211,86 @@ def chat_with_claude(request: ChatRequest):
         "input_tokens": response.usage.input_tokens,
         "output_tokens": response.usage.output_tokens
     }
+
+
+@app.post("/chat-stream")
+def chat_stream(request: ChatRequest):
+    """Send a message to Claude and stream the response back."""
+
+    def generate():
+        with anthropic_client.messages.stream(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1024,
+            system="You are a helpful AI assistant for a Python developer learning AI engineering. Keep responses concise and practical.",
+            messages=[
+                {"role": "user", "content": request.message}
+            ]
+        )as stream:
+            for text in stream.text_stream:
+                yield text
+    return StreamingResponse(generate(), media_type="text/plain")
+
+
+# In-memory conversation storage
+# Dict mapping session_id → list of messages
+conversations: dict[str, list[dict]] = {}
+
+
+class ConversationRequest(BaseModel):
+    session_id: str
+    message: str
+
+@app.post("/conversation")
+def conversation(request: ConversationRequest):
+    """Multi-turn conversation with Claude that remembers history."""
+    
+    # Get or create the conversation history for this session
+    if request.session_id not in conversations:
+        conversations[request.session_id] = []
+    
+    history = conversations[request.session_id]
+    
+    # Add the new user message
+    history.append({"role": "user", "content": request.message})
+    
+    # Call Claude with the FULL history
+    response = anthropic_client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1024,
+        system="You are a helpful AI assistant. Remember the conversation context.",
+        messages=history
+    )
+    
+    # Extract Claude's response
+    assistant_message = response.content[0].text
+    
+    # Add Claude's response to the history
+    history.append({"role": "assistant", "content": assistant_message})
+    
+    return {
+        "session_id": request.session_id,
+        "response": assistant_message,
+        "message_count": len(history),
+        "input_tokens": response.usage.input_tokens,
+        "output_tokens": response.usage.output_tokens
+    }
+
+
+@app.get("/conversation/{session_id}")
+def get_conversation_history(session_id: str):
+    """Retrieve the full message history for a session."""
+    if session_id not in conversations:
+        raise HTTPException(status_code=404, detail="Session not found")
+    return {
+        "session_id": session_id,
+        "messages": conversations[session_id],
+        "message_count": len(conversations[session_id])
+    }
+
+
+@app.delete("/conversation/{session_id}")
+def delete_conversation(session_id: str):
+    """Clear a conversation's history."""
+    if session_id in conversations:
+        del conversations[session_id]
+    return {"deleted": session_id}
