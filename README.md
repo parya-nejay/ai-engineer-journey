@@ -19,6 +19,7 @@ My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 - ✅ Day 3 (May 4): FastAPI CRUD API — REST endpoints, Pydantic models, auto-validation, Swagger docs, persistence
 - ✅ Day 4 (May 6): First Claude API integration — Anthropic SDK, `.env` secrets, AI-powered FastAPI endpoint
 - ✅ Day 5 (May 7): Streaming responses + multi-turn conversation memory — chatbot backend
+- ✅ Day 6 (May 8): Production resilience — error handling, retry logic with exponential backoff, structured logging
 
 ## Stack
 
