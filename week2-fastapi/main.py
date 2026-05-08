@@ -1,96 +1,5 @@
-# from fastapi import FastAPI
-# app = FastAPI()
-
-# @app.get("/")
-# def read_root():
-#     return {"message": "Hello, World!"}
-
-# @app.get("/employees")
-# def get_employees():
-#     return [
-#         {"id": 1, "name": "Alice", "salary": 50000},
-#         {"id": 2, "name": "Bob", "salary": 60000},
-#         {"id": 3, "name": "Charlie", "salary": 70000},
-#     ]
-# @app.get("/employees/{employee_id}")
-# def get_employee(employee_id: int):
-#     employees = {
-#          1: {"id": 1, "name": "Alice", "salary": 50000},
-#         2: {"id": 2, "name": "Bob", "salary": 60000},
-#         3: {"id": 3, "name": "Charlie", "salary": 70000},
-#     }
-#     return employees.get(employee_id, {"error":"Not found"})
-
-# from fastapi import FastAPI, HTTPException
-# from pydantic import BaseModel
-
-# app = FastAPI()
-
-
-# # === Pydantic model — defines the shape of an Employee ===
-# class Employee(BaseModel):
-#     id: int
-#     name: str
-#     salary: int
-
-
-# # === In-memory database (for now) ===
-# employees_db = {
-#     1: {"id": 1, "name": "Alice", "salary": 50000},
-#     2: {"id": 2, "name": "Bob", "salary": 60000},
-#     3: {"id": 3, "name": "Charlie", "salary": 70000},
-# }
-
-
-# # === GET endpoints (read) ===
-
-# @app.get("/")
-# def read_root():
-#     return {"message": "Hello, World!"}
-
-
-# @app.get("/employees")
-# def get_employees():
-#     return list(employees_db.values())
-
-
-# @app.get("/employees/{employee_id}")
-# def get_employee(employee_id: int):
-#     if employee_id not in employees_db:
-#         raise HTTPException(status_code=404, detail="Employee not found")
-#     return employees_db[employee_id]
-
-
-# # === POST endpoint (create) ===
-
-# @app.post("/employees")
-# def create_employee(employee: Employee):
-#     if employee.id in employees_db:
-#         raise HTTPException(status_code=400, detail="Employee with this ID already exists")
-#     employees_db[employee.id] = employee.model_dump()
-#     return employees_db[employee.id]
-
-
-# # === PUT endpoint (update) ===
-
-# @app.put("/employees/{employee_id}")
-# def update_employee(employee_id: int, employee: Employee):
-#     if employee_id not in employees_db:
-#         raise HTTPException(status_code=404, detail="Employee not found")
-#     employees_db[employee_id] = employee.model_dump()
-#     return employees_db[employee_id]
-
-
-# # === DELETE endpoint ===
-
-# @app.delete("/employees/{employee_id}")
-# def delete_employee(employee_id: int):
-#     if employee_id not in employees_db:
-#         raise HTTPException(status_code=404, detail="Employee not found")
-#     deleted = employees_db.pop(employee_id)
-#     return {"deleted": deleted}
-
-
+import logging
+import anthropic
 import json
 import os
 from fastapi import FastAPI, HTTPException
@@ -98,17 +7,26 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from anthropic import Anthropic
 from dotenv import load_dotenv
+from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+# === Logging configuration ===
+logging.basicConfig(  # sets up Python's logging system
+    level=logging.INFO,  # show INFO, WARNING, ERROR messages
+    format="%(asctime)s [%(levelname)s] %(name)s:%(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    force=True,
+)
+logger = logging.getLogger(__name__)
+
 
 load_dotenv()  # Load API key from .env file
 # Initialize the Anthropic client (auto-reads ANTHROPIC_API_KEY)
 anthropic_client = Anthropic()
 
 app = FastAPI()
-
 DB_FILE = "employees.json"
-
-
 # === Pydantic model ===
+
+
 class Employee(BaseModel):
     id: int
     name: str
@@ -117,7 +35,6 @@ class Employee(BaseModel):
 
 class ChatRequest(BaseModel):
     message: str
-
 # === Load/save helpers ===
 
 
@@ -143,9 +60,8 @@ def save_db(db):
 
 # === Initialize on startup ===
 employees_db = load_db()
-
-
 # === Endpoints ===
+
 
 @app.get("/")
 def read_root():
@@ -190,6 +106,31 @@ def delete_employee(employee_id: int):
     deleted = employees_db.pop(employee_id)
     save_db(employees_db)
     return {"deleted": deleted}
+# === Helper: Claude API call with retry ===
+
+
+@retry(
+    stop=stop_after_attempt(3),  # max 3 tries total
+    # wait 2s, 4s, 8s (capped at 10s)
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type((
+        anthropic.RateLimitError,
+        anthropic.APIConnectionError,
+        anthropic.APITimeoutError,
+        anthropic.InternalServerError,
+    )),
+    reraise=True,
+)
+def call_claude(message: str):
+    """Call Claude with automatic retry on transient errors."""
+    return anthropic_client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=1024,
+        system="You are a helpful AI assistant for a Python developer learning AI engineering. Keep responses concise and practical.",
+        messages=[
+            {"role": "user", "content": message}
+        ]
+    )
 
 # Add the AI endpoint
 
@@ -197,20 +138,68 @@ def delete_employee(employee_id: int):
 @app.post("/chat")
 def chat_with_claude(request: ChatRequest):
     """Send a message to Claude and get a response."""
-    response = anthropic_client.messages.create(
-        model="claude-haiku-4-5-20251001",
-        max_tokens=1024,
-        system="You are a helpful AI assistant for a Python developer learning AI engineering. Keep responses concise and practical.",
-        messages=[
-            {"role": "user", "content": request.message}
-        ]
-    )
-    return {
-        "user_message": request.message,
-        "claude_response": response.content[0].text,
-        "input_tokens": response.usage.input_tokens,
-        "output_tokens": response.usage.output_tokens
-    }
+    logger.info(f"/chat received message ({len(request.message)} chars)")
+    try:
+       # response = anthropic_client.messages.create(
+
+        #     model="claude-haiku-4-5-20251001",
+        #     max_tokens=1024,
+        #     system="You are a helpful AI assistant for a Python developer learning AI engineering. Keep responses concise and practical.",
+        #     messages=[
+        #         {"role": "user", "content": request.message}
+        #     ]
+        # )
+        response = call_claude(request.message)   # ← uses retry helper now
+        logger.info(f"/chat succeeded — input_tokens={response.usage.input_tokens}, output_tokens={response.usage.output_tokens}")   # ← NEW
+        return {
+            "user_message": request.message,
+            "claude_response": response.content[0].text,
+            "input_tokens": response.usage.input_tokens,
+            "output_tokens": response.usage.output_tokens
+        }
+
+    except anthropic.AuthenticationError:
+        # Bad API key — permanent error, retrying won't help
+        raise HTTPException(
+            status_code=500,
+            detail="Server configuration error: invalid API key"
+        )
+
+    except anthropic.BadRequestError as e:
+        # Malformed request — your fault, not Claude's
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid request: {str(e)}"
+        )
+
+    except anthropic.RateLimitError:
+        # Hit Anthropic's rate limit — retry will help (we add it in Part 3)
+        raise HTTPException(
+            status_code=429,
+            detail="Service is busy. Please try again in a moment."
+        )
+
+    except anthropic.APIConnectionError:
+        # Network problem reaching Anthropic
+        raise HTTPException(
+            status_code=503,
+            detail="Could not reach AI service. Please try again."
+        )
+
+    except anthropic.APIStatusError as e:
+        # Catch-all for other API errors (5xx server errors, etc.)
+        raise HTTPException(
+            status_code=502,
+            detail=f"AI service error: {e.message}"
+        )
+
+    except Exception as e:
+        # Catch-all for unexpected errors — log it, give generic message to user
+        logger.exception("Unexpected error in /chat")
+        raise HTTPException(
+            status_code=500,
+            detail="An unexpected error occurred. Please try again."
+        )
 
 
 @app.post("/chat-stream")
@@ -240,19 +229,20 @@ class ConversationRequest(BaseModel):
     session_id: str
     message: str
 
+
 @app.post("/conversation")
 def conversation(request: ConversationRequest):
     """Multi-turn conversation with Claude that remembers history."""
-    
+
     # Get or create the conversation history for this session
     if request.session_id not in conversations:
         conversations[request.session_id] = []
-    
+
     history = conversations[request.session_id]
-    
+
     # Add the new user message
     history.append({"role": "user", "content": request.message})
-    
+
     # Call Claude with the FULL history
     response = anthropic_client.messages.create(
         model="claude-haiku-4-5-20251001",
@@ -260,13 +250,13 @@ def conversation(request: ConversationRequest):
         system="You are a helpful AI assistant. Remember the conversation context.",
         messages=history
     )
-    
+
     # Extract Claude's response
     assistant_message = response.content[0].text
-    
+
     # Add Claude's response to the history
     history.append({"role": "assistant", "content": assistant_message})
-    
+
     return {
         "session_id": request.session_id,
         "response": assistant_message,
