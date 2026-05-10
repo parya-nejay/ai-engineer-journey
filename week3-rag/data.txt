@@ -1,0 +1,57 @@
+Maple AI - Company Knowledge Base
+About Maple AI
+
+Maple AI is a Canadian artificial intelligence company founded in 2021 by Sarah Chen and David Park. The company is headquartered in Toronto, Ontario, with additional offices in Montreal and Vancouver. Maple AI specializes in developing large language models and retrieval-augmented generation systems for enterprise customers in finance, healthcare, and legal industries.
+
+The company has grown from 8 founding employees to over 240 employees as of 2026. Maple AI raised a Series B funding round of 95 million Canadian dollars in March 2024, led by Radical Ventures with participation from Real Ventures and OMERS Ventures.
+Products
+
+Maple AI offers three main products:
+
+The first product is Maple Search, a semantic search engine for enterprise documents. It supports over 80 file formats including PDF, DOCX, HTML, and Markdown. Maple Search uses proprietary embedding models trained on Canadian legal and financial corpora, achieving 23 percent better retrieval accuracy on industry benchmarks compared to general-purpose embeddings.
+
+The second product is Maple Chat, a customizable conversational AI platform. Customers can deploy Maple Chat on their own private documents and customize the personality, tone, and response format. Maple Chat supports English, French, and Spanish out of the box, with additional language support available through professional services.
+
+The third product is Maple Studio, a developer platform for building custom AI applications. It provides APIs, SDKs in Python, JavaScript, and Go, plus a visual workflow builder for non-technical users.
+Pricing
+
+Maple AI uses tiered pricing for its Cloud subscription:
+
+The Starter tier costs 49 Canadian dollars per month and includes up to 10,000 API calls, 1 GB of document storage, and email support with a 48-hour response time.
+
+The Professional tier costs 299 Canadian dollars per month and includes up to 100,000 API calls, 50 GB of document storage, priority email support with a 24-hour response time, and access to advanced features like custom embeddings and fine-tuning.
+
+The Enterprise tier offers custom pricing starting at 2,500 Canadian dollars per month. It includes unlimited API calls, unlimited storage, dedicated 24/7 support, on-premises deployment options, SOC 2 Type II compliance, and a dedicated customer success manager.
+
+All paid plans include a 14-day free trial with no credit card required to start.
+Support and Service Levels
+
+Customer support is available Monday through Friday from 8 AM to 8 PM Eastern Time. Enterprise customers receive 24/7 support with a guaranteed 1-hour response time for critical issues. Customers can reach support through email at support@mapleai.ca, through the in-app chat widget, or by phone at 1-800-MAPLE-AI for Enterprise customers only.
+
+The Maple AI status page is available at status.mapleai.ca and provides real-time information on system uptime and any ongoing incidents. The company maintains a 99.95 percent uptime guarantee for Professional and Enterprise tiers.
+Refund Policy
+
+Maple AI offers a 30-day money-back guarantee for all monthly subscriptions. To request a refund, customers must contact support within 30 days of their initial purchase or renewal. Refunds are processed within 5 to 7 business days back to the original payment method.
+
+Annual subscriptions are non-refundable after 60 days from the start of the billing period. However, customers may downgrade to a lower tier at any time, with the price difference applied as account credit toward future invoices.
+
+Enterprise contracts are governed by individual master service agreements and follow the refund and termination terms specified in those contracts.
+Office Locations
+
+The Toronto headquarters is located at 220 King Street West, 14th floor, in the heart of the financial district. This office houses the executive team, sales, marketing, and the largest engineering team.
+
+The Montreal office is at 1250 Boulevard Rene-Levesque West, suite 800. This office focuses on research, particularly fundamental research in language models and embeddings, in close collaboration with Mila and McGill University.
+
+The Vancouver office is at 1185 West Georgia Street, suite 1500. This office is home to the customer success and professional services teams that serve customers in the Pacific time zone.
+Team and Leadership
+
+Sarah Chen is the Chief Executive Officer and co-founder. Before founding Maple AI, she spent eight years at Google as a senior research scientist working on natural language processing. She holds a PhD in Computer Science from the University of Toronto.
+
+David Park is the Chief Technology Officer and co-founder. He previously led the machine learning infrastructure team at Shopify and was an early engineer at Cohere. He holds a Master's degree in Machine Learning from McGill University.
+
+The company's Chief Operating Officer is Marcus Reynolds, who joined in 2023 from Slack where he was VP of Operations. The Chief Financial Officer is Jennifer Wu, who joined in 2024 from RBC.
+Hiring
+
+Maple AI is actively hiring across all three offices. Open roles in 2026 include Senior Machine Learning Engineers, AI Infrastructure Engineers, Site Reliability Engineers, Product Managers, and Customer Success Managers. The company offers competitive salaries, equity, comprehensive health benefits, a 5,000 Canadian dollar annual learning budget, and four weeks of paid vacation in the first year.
+
+All interviews are conducted in a hybrid format, with initial screens by video and final-round interviews on-site. The hiring process typically takes three to four weeks from first contact to offer.
