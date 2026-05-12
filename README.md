@@ -21,6 +21,7 @@ My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 - ✅ Day 5 (May 7): Streaming responses + multi-turn conversation memory — chatbot backend
 - ✅ Day 6 (May 8): Production resilience — error handling, retry logic with exponential backoff, structured logging
 - ✅ Day 7 (May 9): First RAG implementation — Chroma vector DB, semantic search, grounded generation
+- ✅ Day 8: Better RAG (chunking, metadata, citations)
 
 
 ## Stack
@@ -40,5 +41,5 @@ My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 ```
 ai-engineer-journey/
 ├── week1-python-basics/      # Day 1-2: Python fundamentals + OOP
-└── week2-fastapi/            # Day 3-4: FastAPI + Claude integration
+└── week2-fastapi/            # Day 3-4: FastAPI + Claude integration 
 ```
