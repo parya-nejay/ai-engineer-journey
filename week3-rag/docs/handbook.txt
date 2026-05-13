@@ -1,0 +1,25 @@
+Acme Corp Employee Handbook
+============================
+
+About Acme Corp
+---------------
+Acme Corp was founded in 2018 by Sarah Chen and David Park.
+Sarah Chen is the Chief Executive Officer (CEO).
+David Park is the Chief Technology Officer (CTO).
+Our headquarters is in Toronto, Canada.
+
+Vacation Policy
+---------------
+Full-time employees receive 20 paid vacation days per year.
+Vacation days reset every January 1st.
+Unused days do not roll over.
+
+Remote Work
+-----------
+Employees may work remotely up to 3 days per week.
+Friday is a mandatory in-office day for all team meetings.
+
+Health Benefits
+---------------
+Acme Corp provides full dental, vision, and medical coverage.
+Benefits start on day 1 of employment.
