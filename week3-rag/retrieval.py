@@ -32,47 +32,104 @@ _bm25 = BM25Okapi(_tokenized_corpus)
 print(f"  BM25 index ready with {len(_ALL_CHUNKS)} chunks")
 
 
-def vector_search(question: str, top_k: int = 3):
-    """Pure semantic search via Chroma."""
-    results = _collection.query(query_texts=[question], n_results=top_k)
+def vector_search(question: str, top_k: int = 3, source_filter: str = None):
+    """Pure semantic search via Chroma. Optional source_filter scopes to one document."""
+    where_clause = {"source": source_filter} if source_filter else None
+    results = _collection.query(
+        query_texts=[question],
+        n_results=top_k,
+        where=where_clause,
+    )
     return results["documents"][0], results["metadatas"][0]
 
+# def keyword_search(question: str, top_k: int = 3):
+#     """Pure keyword search via BM25."""
+#     tokenized_query = question.lower().split()
+#     scores = _bm25.get_scores(tokenized_query)
 
-def keyword_search(question: str, top_k: int = 3):
-    """Pure keyword search via BM25."""
+
+def keyword_search(question: str, top_k: int = 3, source_filter: str = None):
+    """Pure keyword search via BM25. Optional source_filter scopes to one document."""
     tokenized_query = question.lower().split()
     scores = _bm25.get_scores(tokenized_query)
+    # Build the candidate pool — optionally restrict to chunks matching source_filter
+    if source_filter:
+        candidate_indices = [
+            i for i in range(len(scores))
+            if _ALL_METADATA[i].get("source") == source_filter
+        ]
+    else:
+        candidate_indices = range(len(scores))
+    # Pick the top_k highest-scoring chunks from the candidate pool
+    top_indices = sorted(
+        candidate_indices, key=lambda i: scores[i], reverse=True)[:top_k]
+    chunks = [_ALL_CHUNKS[i] for i in top_indices]
+    metadatas = [_ALL_METADATA[i] for i in top_indices]
+    return chunks, metadatas
 
     # Get the indices of the top_k highest-scoring chunks
-    top_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:top_k]
+    top_indices = sorted(range(len(scores)),
+                         key=lambda i: scores[i], reverse=True)[:top_k]
 
     chunks = [_ALL_CHUNKS[i] for i in top_indices]
     metadatas = [_ALL_METADATA[i] for i in top_indices]
     return chunks, metadatas
 
 
-def hybrid_search(question: str, top_k: int = 3, candidates_per_method: int = 6):
+def hybrid_search(question: str, top_k: int = 3, candidates_per_method: int = 6, source_filter: str = None):
     """
     Hybrid search: combine vector + keyword search using Reciprocal Rank Fusion.
-
     Args:
         question: the user's question
         top_k: how many final chunks to return
         candidates_per_method: how many chunks each method contributes before fusion
+        source_filter: optional source name to scope both searches to one document
     """
     # 1. Vector search → get IDs ranked by semantic similarity
+    where_clause = {"source": source_filter} if source_filter else None
     vec_results = _collection.query(
-        query_texts=[question], n_results=candidates_per_method
+        query_texts=[question],
+        n_results=candidates_per_method,
+        where=where_clause,
     )
     vec_ids = vec_results["ids"][0]
-
     # 2. Keyword search → get IDs ranked by BM25 score
     tokenized_query = question.lower().split()
     scores = _bm25.get_scores(tokenized_query)
+    if source_filter:
+        candidate_indices = [
+            i for i in range(len(scores))
+            if _ALL_METADATA[i].get("source") == source_filter
+        ]
+    else:
+        candidate_indices = range(len(scores))
     keyword_top_indices = sorted(
-        range(len(scores)), key=lambda i: scores[i], reverse=True
+        candidate_indices, key=lambda i: scores[i], reverse=True
     )[:candidates_per_method]
     keyword_ids = [_ALL_IDS[i] for i in keyword_top_indices]
+
+# def hybrid_search(question: str, top_k: int = 3, candidates_per_method: int = 6):
+#     """
+#     Hybrid search: combine vector + keyword search using Reciprocal Rank Fusion.
+
+#     Args:
+#         question: the user's question
+#         top_k: how many final chunks to return
+#         candidates_per_method: how many chunks each method contributes before fusion
+#     """
+#     # 1. Vector search → get IDs ranked by semantic similarity
+#     vec_results = _collection.query(
+#         query_texts=[question], n_results=candidates_per_method
+#     )
+#     vec_ids = vec_results["ids"][0]
+
+#     # 2. Keyword search → get IDs ranked by BM25 score
+#     tokenized_query = question.lower().split()
+#     scores = _bm25.get_scores(tokenized_query)
+#     keyword_top_indices = sorted(
+#         range(len(scores)), key=lambda i: scores[i], reverse=True
+#     )[:candidates_per_method]
+#     keyword_ids = [_ALL_IDS[i] for i in keyword_top_indices]
 
     # 3. Reciprocal Rank Fusion (RRF): combine the rankings
     # Formula: score(chunk) = sum over methods of 1 / (k + rank)
@@ -81,10 +138,12 @@ def hybrid_search(question: str, top_k: int = 3, candidates_per_method: int = 6)
     rrf_k = 60
 
     for rank, chunk_id in enumerate(vec_ids):
-        rrf_scores[chunk_id] = rrf_scores.get(chunk_id, 0) + 1.0 / (rrf_k + rank + 1)
+        rrf_scores[chunk_id] = rrf_scores.get(
+            chunk_id, 0) + 1.0 / (rrf_k + rank + 1)
 
     for rank, chunk_id in enumerate(keyword_ids):
-        rrf_scores[chunk_id] = rrf_scores.get(chunk_id, 0) + 1.0 / (rrf_k + rank + 1)
+        rrf_scores[chunk_id] = rrf_scores.get(
+            chunk_id, 0) + 1.0 / (rrf_k + rank + 1)
 
     # 4. Sort chunks by combined score and take top_k
     sorted_ids = sorted(
@@ -93,5 +152,6 @@ def hybrid_search(question: str, top_k: int = 3, candidates_per_method: int = 6)
 
     # 5. Fetch the actual chunk text + metadata
     chunks = [_ALL_CHUNKS[_id_to_index[chunk_id]] for chunk_id in sorted_ids]
-    metadatas = [_ALL_METADATA[_id_to_index[chunk_id]] for chunk_id in sorted_ids]
+    metadatas = [_ALL_METADATA[_id_to_index[chunk_id]]
+                 for chunk_id in sorted_ids]
     return chunks, metadatas

@@ -25,9 +25,10 @@ anthropic_client = Anthropic()
 
 def rag_answer(question: str, top_k: int = 3) -> str:
     """Run a single question through the RAG pipeline. Returns the answer string."""
-    # 1. Retrieve (HYBRID search: vector + keyword combined)
-    retrieved_chunks, retrieved_metadata = hybrid_search(question, top_k=top_k)
-
+    # # 1. Retrieve (HYBRID search: vector + keyword combined)
+    # retrieved_chunks, retrieved_metadata = hybrid_search(question, top_k=top_k)
+    # 1. Retrieve (HYBRID search: vector + keyword combined, scoped to Maple AI docs)
+    retrieved_chunks, retrieved_metadata = hybrid_search(question, top_k=top_k, source_filter="data.txt")
 
     # 2. Build numbered context
     context_parts = []
