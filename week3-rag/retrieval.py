@@ -9,6 +9,7 @@ Provides three search functions:
 
 import chromadb
 from rank_bm25 import BM25Okapi
+from sentence_transformers import CrossEncoder
 
 
 # === Connect to Chroma ===
@@ -29,8 +30,14 @@ _id_to_index = {chunk_id: i for i, chunk_id in enumerate(_ALL_IDS)}
 # Tokenize each chunk into lowercased words for BM25
 _tokenized_corpus = [chunk.lower().split() for chunk in _ALL_CHUNKS]
 _bm25 = BM25Okapi(_tokenized_corpus)
+#print(f"  BM25 index ready with {len(_ALL_CHUNKS)} chunks")
 print(f"  BM25 index ready with {len(_ALL_CHUNKS)} chunks")
 
+
+# === Load cross-encoder for reranking ===
+print("Loading cross-encoder reranker...")
+_cross_encoder = CrossEncoder("cross-encoder/ms-marco-MiniLM-L-6-v2")
+print("  Cross-encoder ready")
 
 def vector_search(question: str, top_k: int = 3, source_filter: str = None):
     """Pure semantic search via Chroma. Optional source_filter scopes to one document."""
@@ -68,8 +75,9 @@ def keyword_search(question: str, top_k: int = 3, source_filter: str = None):
     return chunks, metadatas
 
     # Get the indices of the top_k highest-scoring chunks
+    
     top_indices = sorted(range(len(scores)),
-                         key=lambda i: scores[i], reverse=True)[:top_k]
+     key=lambda i: scores[i], reverse=True)[:top_k]
 
     chunks = [_ALL_CHUNKS[i] for i in top_indices]
     metadatas = [_ALL_METADATA[i] for i in top_indices]
@@ -150,8 +158,37 @@ def hybrid_search(question: str, top_k: int = 3, candidates_per_method: int = 6,
         rrf_scores.keys(), key=lambda chunk_id: rrf_scores[chunk_id], reverse=True
     )[:top_k]
 
-    # 5. Fetch the actual chunk text + metadata
+  # 5. Fetch the actual chunk text + metadata
     chunks = [_ALL_CHUNKS[_id_to_index[chunk_id]] for chunk_id in sorted_ids]
     metadatas = [_ALL_METADATA[_id_to_index[chunk_id]]
                  for chunk_id in sorted_ids]
     return chunks, metadatas
+
+
+def rerank(question: str, chunks: list, metadatas: list, top_k: int = 3):
+    """
+    Re-score candidate chunks with a cross-encoder and return the top_k.
+
+    Use after a first-stage retrieval (e.g. hybrid_search with a higher candidate
+    count) to filter down to the most relevant chunks.
+
+    Args:
+        question: the user's question
+        chunks: candidate chunks from a retrieval step
+        metadatas: parallel list of metadata for those chunks
+        top_k: how many chunks to return after reranking
+    """
+    # Build (query, chunk) pairs for the cross-encoder
+    pairs = [(question, chunk) for chunk in chunks]
+
+    # Score every pair — higher = more relevant
+    scores = _cross_encoder.predict(pairs)
+
+    # Sort the indices by score descending and keep the top_k
+    ranked_indices = sorted(
+        range(len(scores)), key=lambda i: scores[i], reverse=True
+    )[:top_k]
+
+    reranked_chunks = [chunks[i] for i in ranked_indices]
+    reranked_metadatas = [metadatas[i] for i in ranked_indices]
+    return reranked_chunks, reranked_metadatas

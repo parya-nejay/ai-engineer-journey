@@ -7,7 +7,8 @@ Runs the eval dataset against the RAG system and produces a quality report.
 from anthropic import Anthropic
 from dotenv import load_dotenv
 from eval_dataset import EVAL_DATASET
-from retrieval import hybrid_search    # ← NEW: import our hybrid search
+from retrieval import hybrid_search, rerank
+#from retrieval import hybrid_search    # ← NEW: import our hybrid search
 
 load_dotenv()
 anthropic_client = Anthropic()
@@ -25,10 +26,14 @@ anthropic_client = Anthropic()
 
 def rag_answer(question: str, top_k: int = 3) -> str:
     """Run a single question through the RAG pipeline. Returns the answer string."""
-    # # 1. Retrieve (HYBRID search: vector + keyword combined)
-    # retrieved_chunks, retrieved_metadata = hybrid_search(question, top_k=top_k)
-    # 1. Retrieve (HYBRID search: vector + keyword combined, scoped to Maple AI docs)
-    retrieved_chunks, retrieved_metadata = hybrid_search(question, top_k=top_k, source_filter="data.txt")
+
+    # 1. Retrieve in two passes: hybrid_search casts wide, rerank narrows precisely
+    candidate_chunks, candidate_metadata = hybrid_search(
+        question, top_k=10, candidates_per_method=10
+    )
+    retrieved_chunks, retrieved_metadata = rerank(
+        question, candidate_chunks, candidate_metadata, top_k=top_k
+    )
 
     # 2. Build numbered context
     context_parts = []
