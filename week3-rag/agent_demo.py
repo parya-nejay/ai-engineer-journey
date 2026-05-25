@@ -105,11 +105,22 @@ def search_company_directory(name: str) -> str:
 
 
 # Dispatch table: tool name → Python function that runs it
+# TOOL_FUNCTIONS = {
+#     "calculator": calculator,
+#     "get_weather": get_weather,
+#     "search_company_directory": search_company_directory,
+# }
+
+# Dispatch table: tool name → Python function that runs it
 TOOL_FUNCTIONS = {
     "calculator": calculator,
     "get_weather": get_weather,
     "search_company_directory": search_company_directory,
 }
+
+# Session store: session_id → full message history (including tool_use / tool_result blocks).
+# In production this would be Redis or Postgres; an in-memory dict is fine for proving the pattern.
+sessions = {}
 
 
 # print("Agent demo ready.")
@@ -119,10 +130,21 @@ TOOL_FUNCTIONS = {
 
 # # === The agent loop ===
 # # new
-def run_agent(user_message, tools, tool_functions):
-    """Run the agent loop until Claude returns a final text answer."""
-    messages = [{"role": "user", "content": user_message}]
+# def run_agent(user_message, tools, tool_functions):
+#     """Run the agent loop until Claude returns a final text answer."""
+#     messages = [{"role": "user", "content": user_message}]
 
+def run_agent(user_message, session_id,tools, tool_functions):
+    """Run the agent loop until Claude returns a final text answer.
+
+    Memory: messages are loaded from sessions[session_id] at the start and
+    saved back at the end, so successive calls with the same session_id
+    share history (including tool_use / tool_result blocks).
+    """
+    # LOAD: pick up where this session left off (empty list if brand-new session)
+    messages = sessions.get(session_id, [])
+    messages.append({"role": "user", "content": user_message})
+    
     while True:
         response = client.messages.create(
             model="claude-sonnet-4-6",  # match the model you use in main.py
@@ -134,7 +156,15 @@ def run_agent(user_message, tools, tool_functions):
         print(f"\n[Claude returned stop_reason: {response.stop_reason}]")
 
         # Case 1: Claude is done — return the final text answer
+        # 
+        
+        # Case 1: Claude is done — save history and return the final text answer
         if response.stop_reason == "end_turn":
+            # Append Claude's final assistant turn to history BEFORE saving,
+            # so the next turn's replay includes the answer Claude just gave.
+            messages.append({"role": "assistant", "content": response.content})
+            sessions[session_id] = messages
+
             for block in response.content:
                 if block.type == "text":
                     return block.text
@@ -206,35 +236,56 @@ if __name__ == "__main__":
     print("\n" + "=" * 60)
     print("Test 1: math question (should use calculator)")
     print("=" * 60)
-    answer = run_agent("What is 15 * 9 + 7?", TOOLS, TOOL_FUNCTIONS)
+    answer = run_agent("What is 15 * 9 + 7?", "test1", TOOLS, TOOL_FUNCTIONS)
     print(f"\nFinal answer: {answer}")
 
     print("\n" + "=" * 60)
     print("Test 2: non-math question (should NOT use calculator)")
     print("=" * 60)
-    answer = run_agent("What is the capital of France?", TOOLS, TOOL_FUNCTIONS)
+    answer = run_agent("What is the capital of France?", "test2", TOOLS, TOOL_FUNCTIONS)
     print(f"\nFinal answer: {answer}")
 
     print("=" * 60)
     print("Test 3: weather question (should use get_weather)")
     print("=" * 60)
-    result = run_agent("What's the weather in Toronto?", TOOLS, TOOL_FUNCTIONS)
+    result = run_agent("What's the weather in Toronto?", "test3", TOOLS, TOOL_FUNCTIONS)
     print(f"Final answer: {result}")
 
     print("=" * 60)
     print("Test 4: directory question (should use search_company_directory)")
     print("=" * 60)
-    result = run_agent("How do I contact David in marketing?", TOOLS, TOOL_FUNCTIONS)
+    result = run_agent("How do I contact David in marketing?", "test4", TOOLS, TOOL_FUNCTIONS)
     print(f"Final answer: {result}")
     
     print("=" * 60)
     print("Test 5: multi-tool question (should call TWO tools)")
     print("=" * 60)
-    result = run_agent("What's the weather in Toronto and how do I contact David in marketing?", TOOLS, TOOL_FUNCTIONS)
+    result = run_agent("What's the weather in Toronto and how do I contact David in marketing?", "test5", TOOLS, TOOL_FUNCTIONS)
     print(f"Final answer: {result}")
 
+    # print("=" * 60)
+    # print("Test 6: CHAINED tools (must call directory FIRST, then weather)")
+    # print("=" * 60)
+    # result = run_agent("What's the weather like in the city where David works?", TOOLS, TOOL_FUNCTIONS)
+    # print(f"Final answer: {result}")
+    
     print("=" * 60)
     print("Test 6: CHAINED tools (must call directory FIRST, then weather)")
     print("=" * 60)
-    result = run_agent("What's the weather like in the city where David works?", TOOLS, TOOL_FUNCTIONS)
+    result = run_agent("What's the weather like in the city where David works?", "test6", TOOLS, TOOL_FUNCTIONS)
     print(f"Final answer: {result}")
+
+    print("=" * 60)
+    print("Test 7: TWO-TURN memory (same session_id across calls)")
+    print("=" * 60)
+    print("--- Turn 1 ---")
+    result = run_agent("Who is David and where does he work?", "test7", TOOLS, TOOL_FUNCTIONS)
+    print(f"Turn 1 answer: {result}")
+
+    print("\n--- Turn 2 (the word 'there' only makes sense if memory works) ---")
+    result = run_agent("What's the weather there?", "test7", TOOLS, TOOL_FUNCTIONS)
+    print(f"Turn 2 answer: {result}")
+
+    print(f"\n[Session 'test7' now has {len(sessions['test7'])} message entries in memory]")
+    
+    
