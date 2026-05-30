@@ -8,6 +8,7 @@ from agent_demo import run_agent, TOOLS, TOOL_FUNCTIONS
 import logging
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from anthropic import (
     AuthenticationError,
     RateLimitError,
@@ -18,6 +19,13 @@ from anthropic import (
 logger = logging.getLogger(__name__)
 app = FastAPI(title="Agent Chat API", version="0.1.0") # creat an actual web app and store it in a variable called app(I choose this name app)
 #These two classes define the shape of data going in and out of your endpoint. 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],  # Next.js dev server — we'll add the Vercel URL later
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
 
 class AgentRequest(BaseModel):
     message: str = Field(..., description="The user's message for this turn")
