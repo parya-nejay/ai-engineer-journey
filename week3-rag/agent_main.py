@@ -21,7 +21,7 @@ app = FastAPI(title="Agent Chat API", version="0.1.0") # creat an actual web app
 #These two classes define the shape of data going in and out of your endpoint. 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Next.js dev server — we'll add the Vercel URL later
+    allow_origins=["http://localhost:3000", "https://ai-engineer-journey-one.vercel.app"],  # Next.js dev server — we'll add the Vercel URL later
     allow_methods=["*"],
     allow_headers=["*"],
 )
