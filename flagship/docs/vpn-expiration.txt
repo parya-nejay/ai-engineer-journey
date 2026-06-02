@@ -1,0 +1,9 @@
+Checking and Renewing Your VPN Access
+
+Your VPN password expires every three months and is the same as your Cloud PC password. To avoid losing access, change it before it expires.
+
+To check your VPN expiration date, go to its.example.com, press VPN, then press VPN Request. Your name will already be listed — find your entry and check the expiration date shown next to it.
+
+To change your password yourself, see "Changing or Resetting Your Password (Cloud PC and VPN)."
+
+If your VPN password has already expired, you can no longer change it yourself. Call IT to have it reset.
