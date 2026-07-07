@@ -67,6 +67,25 @@ Phase 7 — Stateful Agents & Production Shape (Days 19–21)
     ✅ Day 20: Agent over HTTP — exposed run_agent() as POST /agent-chat. session_id field threads multi-turn conversations through stateless HTTP requests. Hardened with try/except mapping RateLimitError → 429, APIConnectionError → 503, AuthenticationError / BadRequestError / Exception → 500. The production chat pattern: session store outside, agent loop inside, tools Claude routes to.
     ✅ Day 21: Unit tests for the agent endpoint — pytest + FastAPI TestClient + unittest.mock.patch. Verified all 4 error branches (429 / 503 / 500) by replacing run_agent with controllable fakes that raise specific Anthropic exceptions. Five tests, sub-second per test, zero API credits, zero flakiness. The mental model: you're not testing Anthropic — you're testing your code's reaction to Anthropic's failures.
 
+    ---
+
+# PHASE 6 — Flagship Project (Days 27–28)
+**Folder:** `flagship/`
+
+## Day 27 — Rebuilt indexing pipeline (clean, multi-doc)
+- Rebuilt `loader.py` + `index_docs.py` for the flagship IT-helpdesk RAG. Folder-loop loader (`iterdir`, `is_file()` guard) — data decoupled from logic. Source-prefixed IDs so `chunk_0` from two files don't collide. Metadata: `source`, `chunk_index`, `total_chunks`.
+- Real cleaned IT docs: `vpn-expiration.txt` + `change-password.txt` (company name + domain removed before indexing).
+- **Status:** ✅ Complete.
+
+## Day 28 — Finished the RAG query side + demoed to manager
+- **Built `query.py`** — the query half. Four blocks: (1) connect + `count()` sanity check, (2) `collection.query()` retrieves 3 closest chunks with metadata, (3) glue chunks into context + grounded prompt, (4) send to Claude Haiku, print grounded answer.
+- **The handshake:** query and index share NO memory — the disk is the only channel. Must match `path="./chroma_db"` + collection `name="maple_ai_docs"` exactly, or Chroma returns empty with NO error. Used `get_collection` (read), not `create_collection` (write).
+- **Grounding:** the word ONLY in the prompt + "say I don't know" fallback = answers from OUR docs, not training. Debugged one layer at a time (printed raw chunks before wiring Claude).
+- **Tested:** "When does my VPN expire?" → correct grounded answer from `vpn-expiration.txt`.
+- **Security:** `.env` + `.gitignore` set up in flagship. `git status` before staging; named files in `git add`, never `git add .`.
+- **Real-world win:** Demoed to my manager — he liked it.
+- **Status:** ✅ Complete, committed + pushed (6e2eb48).
+
 Stack
 
     Language: Python 3.x
@@ -104,6 +123,7 @@ ai-engineer-journey/
     ├── tests/
     │   └── test_agent_main.py  # pytest + mock-based endpoint tests (Day 21)
     └── docs/                 # Source documents
+    └── flagship/                # Days 27–28: IT-helpdesk RAG (query.py, index_docs.py, loader.py, docs/)
 
 Highlights
 
@@ -117,7 +137,9 @@ Highlights
    Sequential chaining and dependency depth (Day 18). Same loop, same tools as Day 16. Different question structure ("weather where David works") → Claude inferred the data dependency and ran the tools sequentially. Latency scales with dependency depth, not tool count.
     Stateful agent memory (Day 19). session_id-indexed dict outside the agent loop persists tool_use and tool_result blocks across turns. Turn 2 asked "what's the weather there?" with no mention of "Toronto" or "David" — Claude resolved both referents from the replayed turn-1 history. Same statelessness/replay pattern as Day 5, at a different timescale.
     Testing rigor (Day 21). Wrote pytest + TestClient + mock.patch tests for every error branch in the /agent-chat endpoint. The mental model: you're not testing Anthropic — you're testing your code's reaction to Anthropic's failures. Five tests, sub-second per test, zero API credits burned.
+    9. **The handshake / silent failure (Day 28)** — Indexing and querying share no memory; the disk is their only channel. The DB path and collection name are the handshake — mismatch them and the vector DB returns empty with *no error*. So I verify with a `count()` check before building the query layer on top. *Knowing the silent failure modes is the senior signal.*
+10. **The flagship real-world win (Day 28)** — Identified a repetitive task in my own IT job (VPN/password questions), built a RAG system over our own *cleaned* documents (company name + domain stripped before indexing), and demoed it to my manager, who wanted it for the team. *Build → ship → real adoption interest — not a tutorial.*
 
-Last updated: May 27, 2026 — Day 21
+Last updated: July 6, 2026 — Day 28 complete (RAG query side finished, demoed to manager)
 
 
