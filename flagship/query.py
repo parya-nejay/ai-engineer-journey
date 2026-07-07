@@ -16,24 +16,30 @@ collection = client.get_collection(name="maple_ai_docs")
 print(f"Connected. Collection has {collection.count()} chunks.")
 
 # === 2. Retrieve the most relevant chunks for a question ===
-question = "When does my VPN expire?"
 
-results = collection.query(
-    query_texts=[question],
-    n_results=3,
-)
-retrieved_chunks = results["documents"][0]
-retrieved_metadata = results["metadatas"][0]
 
-print(f"\n--- Retrieved {len(retrieved_chunks)} chunks for: '{question}' ---")
-for i, (chunk, meta) in enumerate(zip(retrieved_chunks, retrieved_metadata), 1):
-    print(f"\n[Chunk {i}] (from {meta['source']})")
-    print(f"  {chunk}")
+def answer(question):
 
-# === 3. Build a grounded prompt from the retrieved chunks ===
-context = "\n\n---\n\n".join(retrieved_chunks)
+    results = collection.query(
+        query_texts=[question],
+        n_results=3,
+    )
+    # retrieved_chunks = results["documents"][0]
 
-prompt = f"""Answer the question using ONLY the information in the Context below.
+    # retrieved_metadata = results["metadatas"][0]
+
+    # print(
+    #     f"\n--- Retrieved {len(retrieved_chunks)} chunks for: '{question}' ---")
+    # for i, (chunk, meta) in enumerate(zip(retrieved_chunks, retrieved_metadata), 1):
+    #     print(f"\n[Chunk {i}] (from {meta['source']})")
+    #     print(f"  {chunk}")
+    retrieved_chunks = results["documents"][0]
+
+
+    # === 3. Build a grounded prompt from the retrieved chunks ===
+    
+    context = "\n\n---\n\n".join(retrieved_chunks)
+    prompt = f"""Answer the question using ONLY the information in the Context below.
 If the Context does not contain the answer, say "I don't have that information in the provided documents."
 
 Context:
@@ -42,15 +48,12 @@ Context:
 Question: {question}
 
 Answer:"""
-
-# === 4. Send to Claude and print the grounded answer ===
-print("\n--- Asking Claude... ---")
-response = anthropic_client.messages.create(
-    model="claude-haiku-4-5-20251001",
-    max_tokens=512,
-    messages=[{"role": "user", "content": prompt}],
-)
-
-answer = response.content[0].text
-print("\n--- ANSWER ---")
-print(answer)
+# === 4. Send to Claude ===
+    response = anthropic_client.messages.create(
+        model="claude-haiku-4-5-20251001",
+        max_tokens=512,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    return response.content[0].text
+# === Quick manual test ===
+print(answer("When does my VPN expire?"))

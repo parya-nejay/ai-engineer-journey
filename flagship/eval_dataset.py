@@ -1,7 +1,7 @@
 eval_cases = [
     {
         "question": "How often does my password expire?",
-        "expected_facts": ["3 months"],
+        "expected_facts": ["three months"],
         "expected_refusal": False,
     },
     {
