@@ -86,6 +86,11 @@ Phase 7 — Stateful Agents & Production Shape (Days 19–21)
 - **Real-world win:** Demoed to my manager — he liked it.
 - **Status:** ✅ Complete, committed + pushed (6e2eb48).
 
+### Day 29 — Flagship Eval Dataset
+- Built `eval_dataset.py` — 7 test cases for the IT-helpdesk RAG (same pattern as Day 10).
+- 4 answerable cases (expected_facts pulled from the real docs) + 3 refusal cases (expected_refusal: True) for topics the docs don't cover.
+- Purpose: a regression tripwire — establishes the "before" so Day 30's hybrid upgrade can be measured, not guessed. "Can't improve what I can't measure."
+
 Stack
 
     Language: Python 3.x
