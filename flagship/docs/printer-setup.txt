@@ -1,0 +1,14 @@
+Requirements:
+Before setting up a printer, your laptop must be connected to the office network using a LAN cable. Wireless will not work for printer setup. Most of our machines run Windows 11.
+
+Steps to add a printer by IP address:
+1. Open Settings, then go to Bluetooth & devices, then Printers & scanners.
+2. Click "Add device".
+3. Wait for it to search, then click "Add manually".
+4. Choose "Add a printer using an IP address or hostname".
+5. Set Device type to "TCP/IP Device".
+6. Enter the printer's IP address (for example, x.x.x.20).
+7. Click Next and follow the prompts to finish.
+
+Notes:
+The printer IP address always ends in 20. If you do not know the full IP, contact IT support.

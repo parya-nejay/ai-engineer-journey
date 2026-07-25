@@ -42,4 +42,5 @@ Answer:"""
     return response.content[0].text
 
 # === Quick manual test ===
-print(answer("When does my VPN expire?"))
+if __name__ == "__main__":
+    print(answer("When does my VPN expire?"))

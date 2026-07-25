@@ -24,14 +24,25 @@ eval_cases = [
         "expected_facts": [],
         "expected_refusal": True,
     },
-    {
+   {
         "question": "How do I set up a new printer?",
-        "expected_facts": [],
-        "expected_refusal": True,
+        "expected_facts": ["LAN", "IP"],
+        "expected_refusal": False,
     },
+    
     {
         "question": "What is the CEO's email address?",
         "expected_facts": [],
         "expected_refusal": True,
+    },
+    {
+        "question": "Can I request to remove the upload restriction on my local PC?",
+        "expected_facts": ["IP address"],
+        "expected_refusal": False,
+    },
+    {
+        "question": "Where do I go to request removing a file upload restriction?",
+        "expected_facts": ["Security Portal"],
+        "expected_refusal": False,
     },
 ]

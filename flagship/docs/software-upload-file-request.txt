@@ -1,0 +1,13 @@
+Software Install and File Upload Requests
+
+Company laptops have security software that blocks employees from uploading files to certain websites or installing certain software. To do these actions, you must request to remove the restriction.
+
+How to request:
+1. Open your EP mail.
+2. On the right side, find "Systems" and choose "Security Portal".
+3. In the Security Portal, on the left side, click [option name - to be confirmed].
+4. Fill out the request form and submit it.
+5. Wait for the approver to review and approve your request.
+
+Important:
+You can only request this for a computer that has an IP address. A cloud PC has an IP address, so you can request the restriction to be removed on a cloud PC. A local PC does not have an IP address, so this request cannot be made for a local PC.
