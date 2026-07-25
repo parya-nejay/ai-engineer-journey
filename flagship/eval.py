@@ -1,9 +1,13 @@
 from eval_dataset import eval_cases
 from query import answer
 passed_count = 0
+import sys
+MODE = sys.argv[1] if len(sys.argv) > 1 else "hybrid"
+print(f"\n=== RUNNING IN MODE: {MODE} ===\n")
+
 for case in eval_cases:
     question = case["question"]
-    result = answer(question)
+    result = answer(question, mode=MODE)
     refused = "I don't have that information" in result
     expected_refusal = case["expected_refusal"]
 
@@ -29,4 +33,4 @@ for case in eval_cases:
             if passed: passed_count += 1
             print("---")
             
-print(f"\nSCORE: {passed_count}/{len(eval_cases)}")
+print(f"\nSCORE ({MODE}): {passed_count}/{len(eval_cases)}")

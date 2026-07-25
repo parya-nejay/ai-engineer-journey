@@ -19,8 +19,8 @@ print(f"Connected. Collection has {collection.count()} chunks.")
 # === 2. Retrieve the most relevant chunks for a question ===
 
 
-def answer(question):
-    retrieved_chunks, _ = hybrid_search(question, top_k=3)
+def answer(question, mode="vector"):
+    retrieved_chunks, _ = hybrid_search(question, top_k=3, mode=mode)
 
     # === 3. Build a grounded prompt from the retrieved chunks ===
     context = "\n\n---\n\n".join(retrieved_chunks)

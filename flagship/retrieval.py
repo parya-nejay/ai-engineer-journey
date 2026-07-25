@@ -20,15 +20,17 @@ _bm25 = BM25Okapi(_tokenized_corpus)
 print(f"BM25 index ready with {len(_ALL_CHUNKS)} chunks")
 
 
-def hybrid_search(question, top_k=3, candidates_per_method=6):
+def hybrid_search(question, top_k=3, candidates_per_method=6, mode="hybrid"):
     # 1. Vector search → ranked IDs
     vec = _collection.query(query_texts=[question], n_results=candidates_per_method)
     vec_ids = vec["ids"][0]
 
     # 2. BM25 keyword search → ranked IDs
-    scores = _bm25.get_scores(question.lower().split())
-    kw_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:candidates_per_method]
-    kw_ids = [_ALL_IDS[i] for i in kw_indices]
+    kw_ids = []
+    if mode == "hybrid":
+        scores = _bm25.get_scores(question.lower().split())
+        kw_indices = sorted(range(len(scores)), key=lambda i: scores[i], reverse=True)[:candidates_per_method]
+        kw_ids = [_ALL_IDS[i] for i in kw_indices]
 
     # 3. Reciprocal Rank Fusion
     rrf, k = {}, 60
