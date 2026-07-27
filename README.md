@@ -1,19 +1,27 @@
 AI Engineer Journey
-## 🚀 Live Demo
+## 🚀 Live Demos
 
-The agent backend from Days 15–21 is deployed and publicly hittable:
+### Flagship — IT Helpdesk RAG (Days 27–34)
 
-**API docs (Swagger UI):** https://ai-engineer-journey-0agd.onrender.com/docs
+A grounded question-answering API over real (anonymized) IT documentation.
+Hybrid retrieval, an automated eval suite, and a 9/9 measured score.
 
-To try the agent yourself: open the URL above → expand `POST /agent-chat` → click **Try it out** → send this JSON:
+**API docs (Swagger UI):** https://flagship-helpdesk-rag.onrender.com/docs
+
+Try it: expand `POST /ask` → **Try it out** → send:
 
 ```json
-{"message": "What is 25 times 47?", "session_id": "demo-1"}
+{"question": "How often does my password expire?"}
 ```
 
-The agent uses Anthropic Claude with tool use (calculator, directory, weather, RAG) and persists session memory across turns via `session_id`.
+> **Note:** Free-tier Render instance — the first request after ~15 min idle
+> takes ~50 seconds (cold start). After that, responses are fast.
 
-> **Note:** Free-tier Render instance — first request after ~15 min of inactivity takes ~50 seconds (cold start). Subsequent requests are instant.
+---
+
+### Agent backend (Days 15–21)
+
+The agent backend from Days 15–21 is deployed and publicly hittable:
 
 My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 
@@ -90,6 +98,11 @@ Phase 7 — Stateful Agents & Production Shape (Days 19–21)
 - Built `eval_dataset.py` — 7 test cases for the IT-helpdesk RAG (same pattern as Day 10).
 - 4 answerable cases (expected_facts pulled from the real docs) + 3 refusal cases (expected_refusal: True) for topics the docs don't cover.
 - Purpose: a regression tripwire — establishes the "before" so Day 30's hybrid upgrade can be measured, not guessed. "Can't improve what I can't measure."
+
+### Day 30 — Eval Grader + answer() Refactor
+- Refactored `query.py` into a reusable `answer(question)` function — CLI and grader share one code path.
+- Built `eval.py` — automated grader, 3 branches (should-refuse, over-refusal, fact-check), prints a score.
+- Baseline: 7/7. Caught a false negative live ("3 months" vs "three months") — fixed the test, not the working code.
 
 Stack
 
