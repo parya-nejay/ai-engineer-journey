@@ -21,7 +21,19 @@ Try it: expand `POST /ask` → **Try it out** → send:
 
 ### Agent backend (Days 15–21)
 
-The agent backend from Days 15–21 is deployed and publicly hittable:
+A multi-tool agent (calculator, directory, weather, RAG) with session memory.
+
+**API docs (Swagger UI):** https://ai-engineer-journey-0agd.onrender.com/docs
+
+Try it: expand `POST /agent-chat` → **Try it out** → send:
+
+```json
+{"message": "What is 25 times 47?", "session_id": "demo-1"}
+```
+
+> **Note:** Same free-tier cold start applies (~50s on first request).
+
+---
 
 My 3-month journey from backend developer (C#/.NET) to AI Engineer (Python).
 
