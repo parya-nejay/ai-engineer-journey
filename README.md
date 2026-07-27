@@ -170,6 +170,5 @@ Highlights
     9. **The handshake / silent failure (Day 28)** — Indexing and querying share no memory; the disk is their only channel. The DB path and collection name are the handshake — mismatch them and the vector DB returns empty with *no error*. So I verify with a `count()` check before building the query layer on top. *Knowing the silent failure modes is the senior signal.*
 10. **The flagship real-world win (Day 28)** — Identified a repetitive task in my own IT job (VPN/password questions), built a RAG system over our own *cleaned* documents (company name + domain stripped before indexing), and demoed it to my manager, who wanted it for the team. *Build → ship → real adoption interest — not a tutorial.*
 
-Last updated: July 6, 2026 — Day 28 complete (RAG query side finished, demoed to manager)
-
+Last updated: July 27, 2026 — Day 34 complete (flagship deployed live on Render)
 
