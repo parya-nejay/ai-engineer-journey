@@ -30,6 +30,10 @@ def hybrid_search(question, top_k=3, candidates_per_method=6, mode="hybrid"):
     vec = _collection.query(query_texts=[question], n_results=candidates_per_method)
     vec_ids = vec["ids"][0]
     vec_ms = (time.perf_counter() - t_vec) * 1000
+       # TEMP Day 36 probe: is the cost per-call or per-machine?
+    t_vec2 = time.perf_counter()
+    _collection.query(query_texts=[question + " again"], n_results=candidates_per_method)
+    vec2_ms = (time.perf_counter() - t_vec2) * 1000
 
     t_rest = time.perf_counter()
 
@@ -53,5 +57,5 @@ def hybrid_search(question, top_k=3, candidates_per_method=6, mode="hybrid"):
     metas = [_ALL_METADATA[_id_to_index[cid]] for cid in top_ids]
     rest_ms = (time.perf_counter() - t_rest) * 1000
 
-    log.info(f"[retrieval] vector_ms={vec_ms:.0f} rest_ms={rest_ms:.0f}")
+    log.info(f"[retrieval] vector_ms={vec_ms:.0f} vector2_ms={vec2_ms:.0f} rest_ms={rest_ms:.0f}")
     return chunks, metas
