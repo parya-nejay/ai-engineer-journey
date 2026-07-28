@@ -1,10 +1,11 @@
 AI Engineer Journey
 ## 🚀 Live Demos
 
-### Flagship — IT Helpdesk RAG (Days 27–34)
+### Flagship — IT Helpdesk RAG (Days 27–37)
 
 A grounded question-answering API over real (anonymized) IT documentation.
-Hybrid retrieval, an automated eval suite, and a 9/9 measured score.
+Vector retrieval, an automated eval suite, and a 9/9 measured score.
+Hybrid search built, A/B tested, and disabled with receipts.
 
 **API docs (Swagger UI):** https://flagship-helpdesk-rag.onrender.com/docs
 
