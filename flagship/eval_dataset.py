@@ -29,7 +29,6 @@ eval_cases = [
         "expected_facts": ["LAN", "IP"],
         "expected_refusal": False,
     },
-    
     {
         "question": "What is the CEO's email address?",
         "expected_facts": [],
