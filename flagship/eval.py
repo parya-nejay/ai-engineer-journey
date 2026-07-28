@@ -2,7 +2,7 @@ from eval_dataset import eval_cases
 from query import answer
 passed_count = 0
 import sys
-MODE = sys.argv[1] if len(sys.argv) > 1 else "hybrid"
+MODE = sys.argv[1] if len(sys.argv) > 1 else "vector"
 print(f"\n=== RUNNING IN MODE: {MODE} ===\n")
 
 for case in eval_cases:
