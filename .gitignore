@@ -19,3 +19,5 @@ env/
 Thumbs.db
 # Vector database (regeneratable from data.txt)
 chroma_db/
+# Private working notes — repo is public
+day-reference.md
