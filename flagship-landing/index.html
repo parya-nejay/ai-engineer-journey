@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IT Helpdesk RAG — Parya Nejat</title>
+
+<script>
+  fetch("https://flagship-helpdesk-rag.onrender.com/health", { mode: "no-cors" });
+</script>
+
+<style>
+  body { font-family: system-ui, sans-serif; max-width: 680px; margin: 0 auto;
+         padding: 40px 20px; line-height: 1.6; color: #1a1a1a; }
+  h1 { margin-bottom: 4px; }
+  .sub { color: #666; margin-top: 0; }
+  h2 { margin-top: 32px; font-size: 1.1rem; }
+  ul { padding-left: 20px; }
+  a.btn { display: inline-block; background: #1a1a1a; color: #fff;
+          padding: 12px 20px; border-radius: 6px; text-decoration: none;
+          margin-top: 16px; }
+  .note { color: #666; font-size: 0.9rem; margin-top: 10px; }
+</style>
+</head>
+<body>
+
+<h1>IT Helpdesk RAG</h1>
+<p class="sub">Retrieval-augmented answering over internal IT documentation.</p>
+
+<h2>What it does</h2>
+<p>Answers IT support questions from a document corpus, and refuses to answer
+when the documents don't cover the question — instead of inventing one.</p>
+
+<h2>What I measured</h2>
+<ul>
+  <li><b>9/9</b> on a custom eval set (refusal, paraphrase, keyword, fact-check cases)</li>
+  <li>Retrieval is <b>~80%</b> of response time — the LLM is only ~1.4s</li>
+  <li>BM25 + RRF fusion cost <b>0ms</b>; 100% of retrieval cost is embedding the query</li>
+</ul>
+
+<h2>What I turned down</h2>
+<ul>
+  <li><b>Hybrid retrieval</b> — built it, A/B tested it, it lost. Shipped vector-only.</li>
+  <li><b>A 20x embedding speedup</b> — needed 300–500MB of PyTorch in a 512MB container.</li>
+  <li><b>Optimizing the 7.4s response</b> — proved it was shared CPU, not my code.</li>
+</ul>
+
+<a class="btn" href="https://flagship-helpdesk-rag.onrender.com/docs">Try the live API →</a>
+<p class="note">Hosted on a free tier. If it's been idle, the first request takes ~50s to wake up.</p>
+
+<h2>Code</h2>
+<p><a href="https://github.com/parya-nejay/ai-engineer-journey">github.com/parya-nejay/ai-engineer-journey</a></p>
+
+</body>
+</html>
