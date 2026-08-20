@@ -20,12 +20,31 @@
           padding: 12px 20px; border-radius: 6px; text-decoration: none;
           margin-top: 16px; }
   .note { color: #666; font-size: 0.9rem; margin-top: 10px; }
+  #q { width: 100%; padding: 12px; font-size: 1rem; font-family: inherit;
+       border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+  #go { background: #1a1a1a; color: #fff; border: none; padding: 12px 20px;
+        border-radius: 6px; font-size: 1rem; margin-top: 10px; cursor: pointer; }
+  #go:disabled { background: #999; cursor: default; }
+  #out { margin-top: 16px; padding: 16px; background: #f6f6f6;
+         border-radius: 6px; white-space: pre-wrap; display: none; }
+  .examples { font-size: 0.9rem; color: #666; margin-top: 8px; }
+  .examples b { color: #1a1a1a; cursor: pointer; text-decoration: underline; font-weight: normal; }
 </style>
 </head>
 <body>
 
 <h1>IT Helpdesk RAG</h1>
 <p class="sub">Retrieval-augmented answering over internal IT documentation.</p>
+
+<h2>Try it</h2>
+<input id="q" placeholder="Ask an IT support question…">
+<button id="go">Ask</button>
+<p class="examples">Try:
+  <b class="ex">How do I reset my password?</b> ·
+  <b class="ex">How do I set up the printer?</b> ·
+  <b class="ex">What is the capital of France?</b>
+</p>
+<div id="out"></div>
 
 <h2>What it does</h2>
 <p>Answers IT support questions from a document corpus, and refuses to answer
@@ -45,10 +64,50 @@ when the documents don't cover the question — instead of inventing one.</p>
   <li><b>Optimizing the 7.4s response</b> — proved it was shared CPU, not my code.</li>
 </ul>
 
-<a class="btn" href="https://flagship-helpdesk-rag.onrender.com/docs">Try the live API →</a>
+<a class="btn" href="https://flagship-helpdesk-rag.onrender.com/docs">Open the API docs →</a>
 <p class="note">Hosted on a free tier — this page starts waking the API the moment you open it, so by now it should be ready. If it's still slow, it's a cold container, not the code.</p>
+
 <h2>Code</h2>
 <p><a href="https://github.com/parya-nejay/ai-engineer-journey">github.com/parya-nejay/ai-engineer-journey</a></p>
+
+<script>
+  const q = document.getElementById("q");
+  const go = document.getElementById("go");
+  const out = document.getElementById("out");
+
+  document.querySelectorAll(".ex").forEach(el => {
+    el.onclick = () => { q.value = el.textContent; ask(); };
+  });
+
+  q.addEventListener("keydown", e => { if (e.key === "Enter") ask(); });
+  go.onclick = ask;
+
+  async function ask() {
+    const question = q.value.trim();
+    if (!question) return;
+
+    go.disabled = true;
+    out.style.display = "block";
+    out.textContent = "Thinking… (first request may take up to a minute if the server is asleep)";
+
+    const started = Date.now();
+    try {
+      const res = await fetch("https://flagship-helpdesk-rag.onrender.com/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question })
+      });
+      if (!res.ok) throw new Error("Server returned " + res.status);
+      const data = await res.json();
+      const secs = ((Date.now() - started) / 1000).toFixed(1);
+      out.textContent = data.answer + "\n\n— answered in " + secs + "s";
+    } catch (err) {
+      out.textContent = "Couldn't reach the API: " + err.message;
+    } finally {
+      go.disabled = false;
+    }
+  }
+</script>
 
 </body>
 </html>
