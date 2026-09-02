@@ -100,7 +100,8 @@ when the documents don't cover the question — instead of inventing one.</p>
       if (!res.ok) throw new Error("Server returned " + res.status);
       const data = await res.json();
       const secs = ((Date.now() - started) / 1000).toFixed(1);
-      out.textContent = data.answer + "\n\n— answered in " + secs + "s";
+      const clean = data.answer.replace(/\*\*/g, "");
+      out.textContent = clean + "\n\n— answered in " + secs + "s";
     } catch (err) {
       out.textContent = "Couldn't reach the API: " + err.message;
     } finally {
